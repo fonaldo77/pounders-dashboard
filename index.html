@@ -657,8 +657,8 @@
     suppressHashHandler = true;
     location.hash = 'player-' + slug(name);
     setTimeout(()=>{ suppressHashHandler = false; }, 0);
-    renderPlayerProfile(state, name);
     switchTab('player');
+    renderPlayerProfile(state, name);
   }
 
   function closePlayerProfile(){
@@ -699,23 +699,25 @@
       <div class="profile-stat"><div class="psv">${v}</div><div class="psl">${esc(l)}</div></div>
     `).join('');
 
-    if(charts.profile) charts.profile.destroy();
-    const ctx = document.getElementById('pfChart').getContext('2d');
-    charts.profile = new Chart(ctx, {
-      type:'line',
-      data:{
-        labels: gp.map(g=>'Wk '+g.week),
-        datasets:[{
-          label:'Cumulative points',
-          data: gp.map(g=>g.running),
-          borderColor:'#236192',
-          backgroundColor:'rgba(93,151,65,0.16)',
-          fill:true, tension:.3, pointRadius:4,
-          pointBackgroundColor: gp.map(g=> g.att==='In' ? '#5D9741' : '#C4C9C6')
-        }]
-      },
-      options:{ plugins:{legend:{display:false}}, scales:{ y:{ grid:{color:'rgba(24,32,24,0.06)'} }, x:{ grid:{display:false} } } }
-    });
+    try{
+      if(charts.profile) charts.profile.destroy();
+      const ctx = document.getElementById('pfChart').getContext('2d');
+      charts.profile = new Chart(ctx, {
+        type:'line',
+        data:{
+          labels: gp.map(g=>'Wk '+g.week),
+          datasets:[{
+            label:'Cumulative points',
+            data: gp.map(g=>g.running),
+            borderColor:'#236192',
+            backgroundColor:'rgba(93,151,65,0.16)',
+            fill:true, tension:.3, pointRadius:4,
+            pointBackgroundColor: gp.map(g=> g.att==='In' ? '#5D9741' : '#C4C9C6')
+          }]
+        },
+        options:{ plugins:{legend:{display:false}}, scales:{ y:{ grid:{color:'rgba(24,32,24,0.06)'} }, x:{ grid:{display:false} } } }
+      });
+    }catch(err){ console.error('profile chart failed', err); }
 
     // career strip
     const career = (SEED.career||[]).find(c=>c.name===name);
@@ -803,39 +805,43 @@
   }
 
   function renderHalfChart(state){
-    if(charts.half) charts.half.destroy();
-    const ctx = document.getElementById('halfChart').getContext('2d');
-    charts.half = new Chart(ctx, {
-      type:'bar',
-      data:{
-        labels: state.games.map(g=>'Wk '+g.week+' vs '+(g.opponent||'?')),
-        datasets:[
-          {label:'1st half GD', data: state.games.map(g=>(g.h1gf||0)-(g.h1ga||0)), backgroundColor:'#1D252D'},
-          {label:'2nd half GD', data: state.games.map(g=>(g.h2gf||0)-(g.h2ga||0)), backgroundColor:'#5D9741'}
-        ]
-      },
-      options:{
-        plugins:{legend:{position:'bottom', labels:{boxWidth:10,font:{size:11}}}},
-        scales:{ x:{ grid:{display:false}, ticks:{font:{size:10}} }, y:{ grid:{color:'rgba(24,32,24,0.06)'} } }
-      }
-    });
+    try{
+      if(charts.half) charts.half.destroy();
+      const ctx = document.getElementById('halfChart').getContext('2d');
+      charts.half = new Chart(ctx, {
+        type:'bar',
+        data:{
+          labels: state.games.map(g=>'Wk '+g.week+' vs '+(g.opponent||'?')),
+          datasets:[
+            {label:'1st half GD', data: state.games.map(g=>(g.h1gf||0)-(g.h1ga||0)), backgroundColor:'#1D252D'},
+            {label:'2nd half GD', data: state.games.map(g=>(g.h2gf||0)-(g.h2ga||0)), backgroundColor:'#5D9741'}
+          ]
+        },
+        options:{
+          plugins:{legend:{position:'bottom', labels:{boxWidth:10,font:{size:11}}}},
+          scales:{ x:{ grid:{display:false}, ticks:{font:{size:10}} }, y:{ grid:{color:'rgba(24,32,24,0.06)'} } }
+        }
+      });
+    }catch(err){ console.error('half chart failed', err); }
   }
 
   function renderAttendance(state){
-    if(charts.attend) charts.attend.destroy();
-    const ctx = document.getElementById('attendChart').getContext('2d');
-    charts.attend = new Chart(ctx, {
-      type:'bar',
-      data:{
-        labels: state.games.map(g=>'Wk '+g.week),
-        datasets:[{
-          label:'Players in',
-          data: state.games.map(g=> Object.values(g.attendance).filter(s=>s==='In').length),
-          backgroundColor:'#236192', borderRadius:3
-        }]
-      },
-      options:{ plugins:{legend:{display:false}}, scales:{ y:{ grid:{color:'rgba(24,32,24,0.06)'} }, x:{grid:{display:false}} } }
-    });
+    try{
+      if(charts.attend) charts.attend.destroy();
+      const ctx = document.getElementById('attendChart').getContext('2d');
+      charts.attend = new Chart(ctx, {
+        type:'bar',
+        data:{
+          labels: state.games.map(g=>'Wk '+g.week),
+          datasets:[{
+            label:'Players in',
+            data: state.games.map(g=> Object.values(g.attendance).filter(s=>s==='In').length),
+            backgroundColor:'#236192', borderRadius:3
+          }]
+        },
+        options:{ plugins:{legend:{display:false}}, scales:{ y:{ grid:{color:'rgba(24,32,24,0.06)'} }, x:{grid:{display:false}} } }
+      });
+    }catch(err){ console.error('attendance chart failed', err); }
 
     const grid = document.getElementById('heatGrid');
     grid.style.gridTemplateColumns = `140px repeat(${state.games.length}, 1fr)`;
@@ -864,22 +870,24 @@
     const top = withTotals.slice(0,8);
     const palette = ['#1D252D','#236192','#5D9741','#B5483A','#8FA098','#9B7FBF','#B06E27','#7A5AA3'];
 
-    if(charts.history) charts.history.destroy();
-    const ctx = document.getElementById('historyChart').getContext('2d');
-    charts.history = new Chart(ctx, {
-      type:'line',
-      data:{
-        labels: top[0].weeks.map((_,i)=>i+1),
-        datasets: top.map((p,i)=>({
-          label:p.name, data:p.weeks, borderColor:palette[i%palette.length],
-          borderWidth: i===0?2.5:1.5, pointRadius:0, tension:.25
-        }))
-      },
-      options:{
-        plugins:{legend:{position:'bottom', labels:{boxWidth:10,font:{size:11}}}},
-        scales:{ x:{title:{display:true,text:'Game # (career)',font:{size:11}}, grid:{display:false}}, y:{grid:{color:'rgba(24,32,24,0.06)'}} }
-      }
-    });
+    try{
+      if(charts.history) charts.history.destroy();
+      const ctx = document.getElementById('historyChart').getContext('2d');
+      charts.history = new Chart(ctx, {
+        type:'line',
+        data:{
+          labels: top[0].weeks.map((_,i)=>i+1),
+          datasets: top.map((p,i)=>({
+            label:p.name, data:p.weeks, borderColor:palette[i%palette.length],
+            borderWidth: i===0?2.5:1.5, pointRadius:0, tension:.25
+          }))
+        },
+        options:{
+          plugins:{legend:{position:'bottom', labels:{boxWidth:10,font:{size:11}}}},
+          scales:{ x:{title:{display:true,text:'Game # (career)',font:{size:11}}, grid:{display:false}}, y:{grid:{color:'rgba(24,32,24,0.06)'}} }
+        }
+      });
+    }catch(err){ console.error('history chart failed', err); }
 
     const body = document.getElementById('careerBody');
     body.innerHTML = SEED.career.slice().sort((a,b)=>b.totalGoals-a.totalGoals).map(c=>`
@@ -991,13 +999,18 @@
   function slug(s){ return String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
 
   function renderAll(state){
-    renderHeader(state);
-    renderLeaderboardTabs(state);
-    renderLeaderboard(state);
-    renderGames(state);
-    renderAttendance(state);
-    renderHistory(state);
-    renderAddGameForm(state);
+    const steps = [
+      ['header', () => renderHeader(state)],
+      ['leaderboard tabs', () => renderLeaderboardTabs(state)],
+      ['leaderboard', () => renderLeaderboard(state)],
+      ['games', () => renderGames(state)],
+      ['attendance', () => renderAttendance(state)],
+      ['history', () => renderHistory(state)],
+      ['add game form', () => renderAddGameForm(state)],
+    ];
+    steps.forEach(([label, fn]) => {
+      try{ fn(); }catch(err){ console.error('render step failed:', label, err); }
+    });
   }
 
   function switchTab(name){
