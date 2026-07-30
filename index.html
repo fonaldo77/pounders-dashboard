@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pounders — Stats HQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --pitch:#16302B;
+    --pitch-2:#1F4438;
+    --chalk:#F6F3EA;
+    --card:#FFFFFF;
+    --ink:#1C1C1A;
+    --ink-soft:#5B5A54;
+    --gold:#D6A233;
+    --gold-soft:#F1DFB2;
+    --win:#3C7A5B;
+    --win-bg:#E4F0E7;
+    --loss:#B5483A;
+    --loss-bg:#F6E4E1;
+    --line: rgba(28,28,26,0.12);
+    --line-strong: rgba(28,28,26,0.22);
+    --shadow: 0 1px 2px rgba(22,48,43,0.06), 0 8px 24px rgba(22,48,43,0.06);
+    --radius: 6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--chalk);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:14px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
+  a{color:inherit;}
+
+  /* ===== Header ===== */
+  .masthead{
+    background:
+      radial-gradient(1200px 400px at 15% -40%, rgba(214,162,51,0.18), transparent 60%),
+      linear-gradient(180deg, var(--pitch) 0%, var(--pitch-2) 100%);
+    color:var(--chalk);
+    padding:28px 20px 0 20px;
+    position:relative;
+  }
+  .masthead::after{
+    content:"";
+    display:block;
+    height:16px;
+    background-image: repeating-linear-gradient(90deg, rgba(246,243,234,0.55) 0 14px, transparent 14px 26px);
+    background-position: bottom;
+    background-size: 100% 2px;
+    background-repeat: no-repeat;
+    opacity:0.5;
+    margin-top:22px;
+  }
+  .masthead-inner{
+    max-width:1120px;
+    margin:0 auto;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:18px;
+    padding-bottom:18px;
+  }
+  .team-id .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    font-size:11px;
+    color:var(--gold-soft);
+    opacity:0.85;
+    margin:0 0 6px 0;
+  }
+  .team-id h1{
+    font-family:'Archivo Black',sans-serif;
+    font-weight:400;
+    font-size:clamp(34px,6vw,56px);
+    letter-spacing:0.01em;
+    margin:0;
+    color:var(--chalk);
+  }
+  .team-id h1 span{color:var(--gold);}
+  .headline-stats{
+    display:flex;
+    gap:26px;
+    flex-wrap:wrap;
+  }
+  .headline-stat{ text-align:right; }
+  .headline-stat .v{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:26px;
+    font-weight:600;
+    color:var(--chalk);
+  }
+  .headline-stat .l{
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:rgba(246,243,234,0.6);
+  }
+  .form-guide{
+    max-width:1120px;
+    margin:0 auto;
+    padding:14px 0 18px 0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .form-guide .fg-label{
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:rgba(246,243,234,0.55);
+    margin-right:4px;
+  }
+  .fg-pill{
+    width:26px;height:26px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; font-weight:600;
+    border:1px solid rgba(246,243,234,0.25);
+    cursor:default;
+    flex:none;
+  }
+  .fg-pill.W{background:var(--gold); color:var(--pitch);}
+  .fg-pill.L{background:rgba(246,243,234,0.12); color:rgba(246,243,234,0.75);}
+  .fg-pill.D{background:rgba(246,243,234,0.2); color:var(--chalk);}
+
+  /* ===== Nav ===== */
+  .tabbar{
+    max-width:1120px;
+    margin:0 auto;
+    display:flex;
+    gap:4px;
+    padding:16px 20px 0 20px;
+    flex-wrap:wrap;
+  }
+  .tab{
+    font-family:'Inter';
+    font-weight:600;
+    font-size:13px;
+    padding:9px 16px;
+    border-radius:999px;
+    background:transparent;
+    border:1px solid transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tab:hover{ background:rgba(28,28,26,0.05); }
+  .tab.active{
+    background:var(--pitch);
+    color:var(--chalk);
+    border-color:var(--pitch);
+  }
+
+  main{
+    max-width:1120px;
+    margin:0 auto;
+    padding:20px;
+  }
+  .view{ display:none; }
+  .view.active{ display:block; animation:fade .2s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-family:'Inter'; font-size:15px; font-weight:700;
+    margin:0 0 4px 0;
+  }
+  .card .sub{
+    color:var(--ink-soft); font-size:12.5px; margin:0 0 14px 0;
+  }
+  .grid-2{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; }
+  .grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media (max-width:820px){ .grid-2, .grid-3{ grid-template-columns:1fr; } }
+
+  /* ===== Tables ===== */
+  table{ width:100%; border-collapse:collapse; }
+  th{
+    text-align:left;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:8px 10px;
+    border-bottom:1px solid var(--line-strong);
+    cursor:pointer;
+    white-space:nowrap;
+    user-select:none;
+  }
+  th.num, td.num{ text-align:right; }
+  th:hover{ color:var(--ink); }
+  th.sorted{ color:var(--pitch); }
+  td{
+    padding:9px 10px;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+    white-space:nowrap;
+  }
+  tr.player-row{ cursor:pointer; }
+  tr.player-row:hover td{ background:rgba(22,48,43,0.035); }
+  td.name{ font-weight:600; }
+  .rank{
+    display:inline-block; width:20px; color:var(--ink-soft); font-family:'IBM Plex Mono';
+  }
+  .pts-cell{ font-weight:700; color:var(--pitch); }
+  .bar-cell{ position:relative; }
+  .bar-track{
+    position:absolute; left:10px; right:10px; bottom:3px; height:3px;
+    background:var(--line);
+    border-radius:2px;
+  }
+  .bar-fill{
+    height:3px; background:var(--gold); border-radius:2px;
+  }
+
+  .expand-row td{ background:#FBFAF6; padding:0; }
+  .expand-inner{ padding:14px 16px 18px 16px; display:none; }
+  .expand-inner.open{ display:block; }
+  .mini-stat-row{ display:flex; gap:20px; flex-wrap:wrap; margin-bottom:12px; }
+  .mini-stat{ font-size:12px; color:var(--ink-soft); }
+  .mini-stat b{ display:block; font-family:'IBM Plex Mono'; font-size:17px; color:var(--ink); font-weight:600; }
+
+  /* ===== chips / badges ===== */
+  .chip{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:600;
+    font-family:'IBM Plex Mono';
+  }
+  .chip.win{ background:var(--win-bg); color:var(--win); }
+  .chip.loss{ background:var(--loss-bg); color:var(--loss); }
+  .status-dot{
+    display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px;
+  }
+  .status-In{ background:var(--win); }
+  .status-Injured\/Sick{ background:#9B7FBF; }
+  .status-Out.of.town{ background:#7C93B0; }
+  .status-Out.-.other{ background:#C98A45; }
+
+  /* ===== attendance heatmap ===== */
+  .heatmap{ overflow-x:auto; }
+  .heat-grid{ display:grid; border-top:1px solid var(--line-strong); border-left:1px solid var(--line-strong); min-width:640px; }
+  .heat-cell{
+    border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+    padding:8px 6px; font-size:11px; text-align:center; font-family:'IBM Plex Mono';
+    display:flex; align-items:center; justify-content:center;
+  }
+  .heat-head{ font-weight:700; background:var(--chalk); font-size:10px; letter-spacing:.04em; }
+  .heat-name{ justify-content:flex-start; font-weight:600; font-family:'Inter'; background:var(--chalk); font-size:12px; }
+  .heat-In{ background:var(--win-bg); color:var(--win); }
+  .heat-Injured\/Sick{ background:#EFE7F5; color:#7A5AA3; }
+  .heat-Out.of.town{ background:#E8EDF2; color:#546E8C; }
+  .heat-Out.-.other{ background:#F7EADB; color:#B06E27; }
+  .legend-row{ display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; }
+  .legend-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); }
+  .legend-swatch{ width:10px; height:10px; border-radius:2px; }
+
+  /* ===== forms ===== */
+  label{ font-size:11.5px; font-weight:600; color:var(--ink-soft); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.03em; }
+  input, select{
+    width:100%;
+    padding:8px 9px;
+    border:1px solid var(--line-strong);
+    border-radius:4px;
+    font-family:'Inter';
+    font-size:13px;
+    background:#fff;
+    color:var(--ink);
+  }
+  input:focus, select:focus{ outline:2px solid var(--gold); outline-offset:0; border-color:var(--gold); }
+  .field{ margin-bottom:12px; }
+  .field-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  @media (max-width:700px){ .field-row{ grid-template-columns:repeat(2,1fr); } }
+  .btn{
+    font-family:'Inter'; font-weight:700; font-size:13px;
+    padding:10px 18px; border-radius:5px; border:1px solid var(--pitch);
+    background:var(--pitch); color:var(--chalk); cursor:pointer;
+  }
+  .btn:hover{ background:var(--pitch-2); }
+  .btn.ghost{
+    background:transparent; color:var(--pitch); border:1px solid var(--line-strong);
+  }
+  .btn.ghost:hover{ background:rgba(22,48,43,0.05); }
+  .btn.small{ padding:6px 12px; font-size:12px; }
+  .btn.danger{ border-color:var(--loss); color:var(--loss); background:transparent; }
+  .btn.danger:hover{ background:var(--loss-bg); }
+
+  .event-row{
+    display:grid;
+    grid-template-columns: 1.2fr 1.2fr 1.2fr auto;
+    gap:8px;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .event-row .pts-preview{
+    font-family:'IBM Plex Mono'; font-size:12px; font-weight:600; color:var(--pitch); text-align:center;
+    padding:8px 0;
+  }
+  .remove-x{
+    background:none; border:none; color:var(--loss); cursor:pointer; font-size:16px; line-height:1; padding:6px;
+  }
+
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
+  .save-note{ font-size:12px; color:var(--ink-soft); }
+  .save-note.ok{ color:var(--win); }
+
+  footer{
+    max-width:1120px; margin:0 auto; padding:10px 20px 40px 20px;
+    color:var(--ink-soft); font-size:11.5px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+
+  .empty{ color:var(--ink-soft); font-size:13px; padding:20px 0; text-align:center; }
+
+  .season-chip{
+    display:inline-block; padding:3px 10px; border-radius:999px; background:var(--gold-soft); color:#7A5A16;
+    font-family:'IBM Plex Mono'; font-size:11px; font-weight:600; margin-right:6px;
+  }
+  select.roster-pick{ max-width:220px; }
+
+  .two-col-charts{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:820px){ .two-col-charts{ grid-template-columns:1fr; } }
+
+  .chart-wrap{ position:relative; height:280px; }
+  .chart-wrap.tall{ height:360px; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="team-id">
+      <p class="eyebrow" id="seasonEyebrow">8v8 · Rec League</p>
+      <h1>POUNDER<span>S</span></h1>
+    </div>
+    <div class="headline-stats" id="headlineStats"></div>
+  </div>
+  <div class="form-guide">
+    <span class="fg-label">Form</span>
+    <div id="formGuide" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+  </div>
+</div>
+
+<nav class="tabbar" id="tabbar">
+  <button class="tab active" data-view="leaderboard">Leaderboard</button>
+  <button class="tab" data-view="games">Games</button>
+  <button class="tab" data-view="attendance">Attendance</button>
+  <button class="tab" data-view="history">History</button>
+  <button class="tab" data-view="addgame">+ Add Game</button>
+</nav>
+
+<main>
+
+  <!-- LEADERBOARD -->
+  <section class="view active" id="view-leaderboard">
+    <div class="card">
+      <h2>Spring 2026 Leaderboard</h2>
+      <p class="sub">Points = position-weighted scoring (keepers & defenders earn more per goal). Click a player to see their game log.</p>
+      <div style="overflow-x:auto;">
+        <table id="lbTable">
+          <thead>
+            <tr>
+              <th style="width:24px;"></th>
+              <th data-sort="name">Player</th>
+              <th class="num" data-sort="games">GP</th>
+              <th class="num" data-sort="goals">G</th>
+              <th class="num" data-sort="assists">A</th>
+              <th class="num" data-sort="cleanSheets">CS</th>
+              <th class="num" data-sort="cards">Card/PK</th>
+              <th class="num" data-sort="points">Pts</th>
+              <th class="num" data-sort="ppg">PPG</th>
+            </tr>
+          </thead>
+          <tbody id="lbBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAMES -->
+  <section class="view" id="view-games">
+    <div class="card">
+      <h2>Game Log</h2>
+      <p class="sub">Spring 2026 · click a game to see the scoring breakdown.</p>
+      <div id="gamesList"></div>
+    </div>
+    <div class="card">
+      <h2>Half-by-half swing</h2>
+      <p class="sub">Goal differential, 1st half vs 2nd half, by game.</p>
+      <div class="chart-wrap"><canvas id="halfChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ATTENDANCE -->
+  <section class="view" id="view-attendance">
+    <div class="card">
+      <h2>Weekly turnout</h2>
+      <div class="chart-wrap"><canvas id="attendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Attendance grid</h2>
+      <p class="sub">Every player, every week.</p>
+      <div class="heatmap"><div id="heatGrid" class="heat-grid"></div></div>
+      <div class="legend-row">
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--win-bg);border:1px solid var(--win);"></span>In</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:#EFE7F5;border:1px solid #7A5AA3;"></span>Injured / Sick</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:#E8EDF2;border:1px solid #546E8C;"></span>Out of town</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:#F7EADB;border:1px solid #B06E27;"></span>Out — other</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="view" id="view-history">
+    <div class="card">
+      <h2>Cumulative points across every season</h2>
+      <p class="sub">Winter 2025 → Spring 2026, top 8 by career points shown. This reflects the workbook's full history; new games you add this session extend the Spring 2026 leaderboard but not this historical chart.</p>
+      <div class="chart-wrap tall"><canvas id="historyChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Career totals</h2>
+      <div style="overflow-x:auto;">
+        <table id="careerTable">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th class="num">Games (before Spring '26)</th>
+              <th class="num">Goals (before)</th>
+              <th class="num">Assists (before)</th>
+              <th class="num">Career G</th>
+              <th class="num">Career A</th>
+              <th class="num">Career GP</th>
+            </tr>
+          </thead>
+          <tbody id="careerBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADD GAME -->
+  <section class="view" id="view-addgame">
+    <div class="card">
+      <h2>Add a game</h2>
+      <p class="sub">Log the result, who showed up, and what happened — the leaderboard and charts update immediately and are saved for next time.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Opponent</label>
+          <input type="text" id="ag-opponent" placeholder="e.g. Far Post">
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="ag-date">
+        </div>
+        <div class="field">
+          <label>Field</label>
+          <input type="text" id="ag-field" placeholder="e.g. Jefferson Playfield">
+        </div>
+        <div class="field">
+          <label>Kickoff time</label>
+          <input type="time" id="ag-time">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field"><label>1st half — us</label><input type="number" id="ag-h1gf" value="0" min="0"></div>
+        <div class="field"><label>1st half — them</label><input type="number" id="ag-h1ga" value="0" min="0"></div>
+        <div class="field"><label>2nd half — us</label><input type="number" id="ag-h2gf" value="0" min="0"></div>
+        <div class="field"><label>2nd half — them</label><input type="number" id="ag-h2ga" value="0" min="0"></div>
+      </div>
+
+      <h2 style="margin-top:22px;">Attendance</h2>
+      <div id="ag-attendance" class="field-row" style="grid-template-columns:repeat(3,1fr);"></div>
+
+      <h2 style="margin-top:22px;">Scoring events</h2>
+      <p class="sub">Goals, assists, clean sheets, cards. Points are calculated automatically from each player's position.</p>
+      <div id="ag-events"></div>
+      <button class="btn ghost small" id="ag-addEvent" type="button">+ Add event</button>
+
+      <div class="toolbar" style="margin-top:22px;">
+        <button class="btn" id="ag-save" type="button">Save game</button>
+        <span class="save-note" id="ag-note"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0;">Data</h2>
+      </div>
+      <p class="sub">Everything you add is saved to your browser's Claude storage for this artifact — it'll be here next time you open it. If something looks off, you can reset back to the original spreadsheet import.</p>
+      <button class="btn danger small" id="resetData" type="button">Reset to original season data</button>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>Pounders Stats HQ · built from your season workbook</span>
+  <span id="lastSaved"></span>
+</footer>
+
+<script id="seed-data" type="application/json">{"legend": {"Goal": 6, "Assist": 3, "Clean-Enough Sheet": 4, "Missed PK": -2, "Own Goal": -2, "Yellow Card": -1}, "leaderboard": [{"name": "Alex B", "games": 7, "goals": 0, "assists": 0, "cleanSheets": 1, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 18, "ppg": 2.5714285714285716}, {"name": "Alex G", "games": 10, "goals": 3, "assists": 7, "cleanSheets": 2, "missedPK": 0, "ownGoal": 0, "yellowCard": 1, "points": 66, "ppg": 6.6}, {"name": "Bongo", "games": 6, "goals": 2, "assists": 4, "cleanSheets": 0, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 34, "ppg": 5.666666666666667}, {"name": "Brad", "games": 7, "goals": 13, "assists": 8, "cleanSheets": 0, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 103, "ppg": 14.714285714285714}, {"name": "Cam", "games": 10, "goals": 15, "assists": 15, "cleanSheets": 0, "missedPK": 1, "ownGoal": 0, "yellowCard": 0, "points": 126, "ppg": 12.6}, {"name": "Danny", "games": 5, "goals": 5, "assists": 10, "cleanSheets": 0, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 65, "ppg": 13}, {"name": "Fo", "games": 3, "goals": 1, "assists": 1, "cleanSheets": 0, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 13, "ppg": 4.333333333333333}, {"name": "Jake", "games": 8, "goals": 6, "assists": 2, "cleanSheets": 0, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 52, "ppg": 6.5}, {"name": "James", "games": 9, "goals": 6, "assists": 6, "cleanSheets": 0, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 66, "ppg": 7.333333333333333}, {"name": "Jon", "games": 6, "goals": 1, "assists": 1, "cleanSheets": 2, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 29, "ppg": 4.833333333333333}, {"name": "Nick", "games": 5, "goals": 9, "assists": 4, "cleanSheets": 0, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 66, "ppg": 13.2}, {"name": "Richie", "games": 8, "goals": 2, "assists": 3, "cleanSheets": 1, "missedPK": 0, "ownGoal": 1, "yellowCard": 0, "points": 38, "ppg": 4.75}, {"name": "Skyler", "games": 7, "goals": 6, "assists": 4, "cleanSheets": 1, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 65, "ppg": 9.285714285714286}, {"name": "Stephen", "games": 7, "goals": 3, "assists": 1, "cleanSheets": 0, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 30, "ppg": 4.285714285714286}, {"name": "Zach", "games": 8, "goals": 6, "assists": 1, "cleanSheets": 0, "missedPK": 0, "ownGoal": 0, "yellowCard": 0, "points": 49, "ppg": 6.125}], "games": [{"week": 1, "opponent": "Far Post", "teamGoals": 9, "teamAssists": 7}, {"week": 2, "opponent": "Tangle Town", "teamGoals": 5, "teamAssists": 4}, {"week": 3, "opponent": "Lea Hill Legends", "teamGoals": 6, "teamAssists": 3}, {"week": 4, "opponent": "Al nomu phi phariqi", "teamGoals": 16, "teamAssists": 15}, {"week": 5, "opponent": "Blue Ballers", "teamGoals": 6, "teamAssists": 6}, {"week": 6, "opponent": "Mednesday Marmots", "teamGoals": 9, "teamAssists": 9}, {"week": 7, "opponent": "Joe Schmoes", "teamGoals": 11, "teamAssists": 7}, {"week": 8, "opponent": "Joe Schmoes", "teamGoals": 6, "teamAssists": 5}, {"week": 9, "opponent": "Far Post", "teamGoals": 7, "teamAssists": 6}, {"week": 10, "opponent": "Dangleton Wednesday", "teamGoals": 5, "teamAssists": 5}, {"week": 11, "opponent": "-", "teamGoals": 0, "teamAssists": 0}], "scores": [{"week": 1, "opponent": "Far Post", "h1gf": 5, "h1ga": 3, "h2gf": 4, "h2ga": 5}, {"week": 2, "opponent": "Tangle Town", "h1gf": 4, "h1ga": 4, "h2gf": 1, "h2ga": 2}, {"week": 3, "opponent": "Lea Hill Legends", "h1gf": 4, "h1ga": 2, "h2gf": 2, "h2ga": 2}, {"week": 4, "opponent": "Al nomu phi phariqi", "h1gf": 3, "h1ga": 2, "h2gf": 13, "h2ga": 2}, {"week": 5, "opponent": "Blue Ballers", "h1gf": 2, "h1ga": 0, "h2gf": 4, "h2ga": 0}, {"week": 6, "opponent": "Mednesday Marmots", "h1gf": 5, "h1ga": 2, "h2gf": 4, "h2ga": 3}, {"week": 7, "opponent": "Joe Schmoes", "h1gf": 2, "h1ga": 2, "h2gf": 9, "h2ga": 1}, {"week": 8, "opponent": "Joe Schmoes", "h1gf": 6, "h1ga": 3, "h2gf": 0, "h2ga": 1}, {"week": 9, "opponent": "Far Post", "h1gf": 3, "h1ga": 3, "h2gf": 3, "h2ga": 2}, {"week": 10, "opponent": "Dangleton Wednesday", "h1gf": 3, "h1ga": 0, "h2gf": 2, "h2ga": 0}, {"week": 11, "opponent": "-", "h1gf": null, "h1ga": null, "h2gf": null, "h2ga": null}], "events": [{"week": 1, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 1, "name": "Brad", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 1, "name": "Brad", "type": "Goal", "assister": null, "position": "Mid", "points": 5}, {"week": 1, "name": "Brad", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 1, "name": "Cam", "type": "Goal", "assister": "Brad", "position": "Forward", "points": 4}, {"week": 1, "name": "Zach", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 1, "name": "Alex G", "type": "Goal", "assister": "Zach", "position": "Defender", "points": 6}, {"week": 1, "name": "Alex G", "type": "Yellow Card", "assister": null, "position": "Defender", "points": -1}, {"week": 1, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 1, "name": "James", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 1, "name": "Skyler", "type": "Goal", "assister": null, "position": "Defender", "points": 6}, {"week": 1, "name": "Bongo", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 1, "name": "Brad", "type": "Goal", "assister": "Bongo", "position": "Mid", "points": 5}, {"week": 1, "name": "Alex G", "type": "Goal", "assister": "Danny", "position": "Defender", "points": 6}, {"week": 1, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 1, "name": "Brad", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 1, "name": "Cam", "type": "Goal", "assister": "Brad", "position": "Forward", "points": 4}, {"week": 1, "name": "Cam", "type": "Missed PK", "assister": null, "position": "Forward", "points": -2}, {"week": 2, "name": "Richie", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 2, "name": "James", "type": "Goal", "assister": "Richie", "position": "Forward", "points": 4}, {"week": 2, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 2, "name": "Brad", "type": "Goal", "assister": "Danny", "position": "Mid", "points": 5}, {"week": 2, "name": "Jon", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 2, "name": "Brad", "type": "Goal", "assister": "Jon", "position": "Mid", "points": 5}, {"week": 2, "name": "Brad", "type": "Goal", "assister": null, "position": "Mid", "points": 5}, {"week": 2, "name": "Brad", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 2, "name": "Zach", "type": "Goal", "assister": "Brad", "position": "Mid", "points": 5}, {"week": 3, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 3, "name": "Brad", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 3, "name": "Danny", "type": "Goal", "assister": null, "position": "Mid", "points": 5}, {"week": 3, "name": "Jake", "type": "Goal", "assister": null, "position": "Mid", "points": 5}, {"week": 3, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 3, "name": "Cam", "type": "Goal", "assister": "Danny", "position": "Forward", "points": 4}, {"week": 3, "name": "James", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 3, "name": "Danny", "type": "Goal", "assister": "James", "position": "Mid", "points": 5}, {"week": 3, "name": "Brad", "type": "Goal", "assister": null, "position": "Mid", "points": 5}, {"week": 4, "name": "James", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 4, "name": "Bongo", "type": "Goal", "assister": "James", "position": "Mid", "points": 5}, {"week": 4, "name": "Stephen", "type": "Goal", "assister": null, "position": "Forward", "points": 4}, {"week": 4, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 4, "name": "Stephen", "type": "Goal", "assister": "Danny", "position": "Forward", "points": 4}, {"week": 4, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 4, "name": "Skyler", "type": "Goal", "assister": "Danny", "position": "Defender", "points": 6}, {"week": 4, "name": "James", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 4, "name": "Cam", "type": "Goal", "assister": "James", "position": "Forward", "points": 4}, {"week": 4, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 4, "name": "Cam", "type": "Goal", "assister": "Danny", "position": "Forward", "points": 4}, {"week": 4, "name": "James", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 4, "name": "Danny", "type": "Goal", "assister": "James", "position": "Mid", "points": 5}, {"week": 4, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 4, "name": "Cam", "type": "Goal", "assister": "Danny", "position": "Forward", "points": 4}, {"week": 4, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 4, "name": "James", "type": "Goal", "assister": "Danny", "position": "Mid", "points": 5}, {"week": 4, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 4, "name": "Stephen", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 4, "name": "Skyler", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 4, "name": "Danny", "type": "Goal", "assister": "Skyler", "position": "Mid", "points": 5}, {"week": 4, "name": "Skyler", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 4, "name": "Cam", "type": "Goal", "assister": "Skyler", "position": "Forward", "points": 4}, {"week": 4, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 4, "name": "Skyler", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 4, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 4, "name": "Jon", "type": "Goal", "assister": "Cam", "position": "Defender", "points": 6}, {"week": 4, "name": "Bongo", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 4, "name": "James", "type": "Goal", "assister": "Bongo", "position": "Mid", "points": 5}, {"week": 4, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 4, "name": "Bongo", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 5, "name": "James", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 5, "name": "Cam", "type": "Goal", "assister": "James", "position": "Forward", "points": 4}, {"week": 5, "name": "Alex G", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 5, "name": "Cam", "type": "Goal", "assister": "Alex G", "position": "Forward", "points": 4}, {"week": 5, "name": "James", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 5, "name": "Nick", "type": "Goal", "assister": "James", "position": "Forward", "points": 4}, {"week": 5, "name": "Alex G", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 5, "name": "Brad", "type": "Goal", "assister": "Alex G", "position": "Mid", "points": 5}, {"week": 5, "name": "Cam", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 5, "name": "Jake", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 5, "name": "Cam", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 5, "name": "Brad", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 5, "name": "Alex G", "type": "Clean-Enough Sheet", "assister": null, "position": "Defender", "points": 4}, {"week": 5, "name": "Jon", "type": "Clean-Enough Sheet", "assister": null, "position": "Defender", "points": 4}, {"week": 5, "name": "Richie", "type": "Clean-Enough Sheet", "assister": null, "position": "Defender", "points": 4}, {"week": 6, "name": "Brad", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 6, "name": "James", "type": "Goal", "assister": "Brad", "position": "Mid", "points": 5}, {"week": 6, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 6, "name": "Nick", "type": "Goal", "assister": "Danny", "position": "Mid", "points": 5}, {"week": 6, "name": "Brad", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 6, "name": "Cam", "type": "Goal", "assister": "Brad", "position": "Forward", "points": 4}, {"week": 6, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 6, "name": "Nick", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 6, "name": "Jake", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 6, "name": "James", "type": "Goal", "assister": "Jake", "position": "Defender", "points": 6}, {"week": 6, "name": "Alex G", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 6, "name": "Danny", "type": "Goal", "assister": "Alex G", "position": "Mid", "points": 5}, {"week": 6, "name": "Alex G", "type": "Goal", "assister": "Danny", "position": "Defender", "points": 6}, {"week": 6, "name": "Danny", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 6, "name": "Fo", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 6, "name": "Cam", "type": "Goal", "assister": "Fo", "position": "Mid", "points": 5}, {"week": 6, "name": "Alex G", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 6, "name": "Jake", "type": "Goal", "assister": "Alex G", "position": "Mid", "points": 5}, {"week": 7, "name": "Brad", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 7, "name": "Nick", "type": "Goal", "assister": "Brad", "position": "Mid", "points": 5}, {"week": 7, "name": "Cam", "type": "Goal", "assister": null, "position": "Forward", "points": 4}, {"week": 7, "name": "Stephen", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 7, "name": "Brad", "type": "Goal", "assister": "Stephen", "position": "Mid", "points": 5}, {"week": 7, "name": "Richie", "type": "Goal", "assister": null, "position": "Defender", "points": 6}, {"week": 7, "name": "Brad", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 7, "name": "Fo", "type": "Goal", "assister": "Brad", "position": "Forward", "points": 4}, {"week": 7, "name": "Cam", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 7, "name": "Skyler", "type": "Goal", "assister": "Cam", "position": "Defender", "points": 6}, {"week": 7, "name": "Brad", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 7, "name": "Nick", "type": "Goal", "assister": "Brad", "position": "Mid", "points": 5}, {"week": 7, "name": "Nick", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 7, "name": "Skyler", "type": "Goal", "assister": "Nick", "position": "Defender", "points": 6}, {"week": 7, "name": "Nick", "type": "Goal", "assister": null, "position": "Mid", "points": 5}, {"week": 7, "name": "Nick", "type": "Goal", "assister": null, "position": "Mid", "points": 5}, {"week": 7, "name": "Nick", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 7, "name": "Jake", "type": "Goal", "assister": "Nick", "position": "Mid", "points": 5}, {"week": 8, "name": "Jake", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 8, "name": "Brad", "type": "Goal", "assister": "Jake", "position": "Mid", "points": 5}, {"week": 8, "name": "Skyler", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 8, "name": "Cam", "type": "Goal", "assister": "Skyler", "position": "Forward", "points": 4}, {"week": 8, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 8, "name": "Brad", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 8, "name": "Cam", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 8, "name": "Jake", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 8, "name": "Skyler", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 8, "name": "Zach", "type": "Goal", "assister": "Skyler", "position": "Mid", "points": 5}, {"week": 8, "name": "Zach", "type": "Goal", "assister": null, "position": "Mid", "points": 5}, {"week": 9, "name": "Alex G", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 9, "name": "Zach", "type": "Goal", "assister": "Alex G", "position": "Mid", "points": 5}, {"week": 9, "name": "Nick", "type": "Assist", "assister": null, "position": "Forward", "points": 3}, {"week": 9, "name": "Cam", "type": "Goal", "assister": "Nick", "position": "Mid", "points": 5}, {"week": 9, "name": "Bongo", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 9, "name": "Jake", "type": "Goal", "assister": "Bongo", "position": "Mid", "points": 5}, {"week": 9, "name": "Alex G", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 9, "name": "Nick", "type": "Goal", "assister": "Alex G", "position": "Mid", "points": 5}, {"week": 9, "name": "Cam", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 9, "name": "Nick", "type": "Goal", "assister": "Cam", "position": "Mid", "points": 5}, {"week": 9, "name": "Bongo", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 9, "name": "Extra", "type": "Goal", "assister": "Bongo", "position": "Mid", "points": 5}, {"week": 9, "name": "Richie", "type": "Own Goal", "assister": null, "position": "Defender", "points": -2}, {"week": 10, "name": "Richie", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 10, "name": "Zach", "type": "Goal", "assister": "Richie", "position": "Mid", "points": 5}, {"week": 10, "name": "Richie", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 10, "name": "Cam", "type": "Goal", "assister": "Richie", "position": "Mid", "points": 5}, {"week": 10, "name": "Alex G", "type": "Assist", "assister": null, "position": "Defender", "points": 3}, {"week": 10, "name": "Zach", "type": "Goal", "assister": "Alex G", "position": "Mid", "points": 5}, {"week": 10, "name": "Nick", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 10, "name": "Richie", "type": "Goal", "assister": "Nick", "position": "Mid", "points": 5}, {"week": 10, "name": "Cam", "type": "Assist", "assister": null, "position": "Mid", "points": 3}, {"week": 10, "name": "Skyler", "type": "Goal", "assister": "Cam", "position": "Defender", "points": 6}, {"week": 10, "name": "Alex G", "type": "Clean-Enough Sheet", "assister": null, "position": "Defender", "points": 4}, {"week": 10, "name": "Alex B", "type": "Clean-Enough Sheet", "assister": null, "position": "Defender", "points": 4}, {"week": 10, "name": "Skyler", "type": "Clean-Enough Sheet", "assister": null, "position": "Defender", "points": 4}, {"week": 10, "name": "Jon", "type": "Clean-Enough Sheet", "assister": null, "position": "Defender", "points": 4}], "gameMeta": {"1": {"date": "2026-03-18T00:00:00", "time": "8:15pm", "field": "Jefferson Playfield (south)"}, "2": {"date": "2026-04-01T00:00:00", "time": "20:30:00", "field": "Shoreline Center Park Field A (North)"}, "3": {"date": "2026-04-08T00:00:00", "time": "20:30:00", "field": "Jefferson Park Playfield - Mod South"}, "4": {"date": "2026-04-22T00:00:00", "time": "20:45:00", "field": "Lower Woodland #2 Mod West"}, "5": {"date": "2026-05-06T00:00:00", "time": "20:00:00", "field": "Magnuson #7 (South) - Mod South"}, "6": {"date": "2026-05-13T00:00:00", "time": "20:00:00", "field": "Magnuson #7 (South) - Mod South"}, "7": {"date": "2026-05-20T00:00:00", "time": "21:00:00", "field": "Jefferson Park Playfield - Mod South"}, "8": {"date": "2026-05-27T00:00:00", "time": "20:30:00", "field": "Washington Park Playfield (south)"}, "9": {"date": "2026-06-03T00:00:00", "time": "20:00:00", "field": "Magnuson #7 (South) - Mod North"}, "10": {"date": "2026-06-10T00:00:00", "time": "20:30:00", "field": "Lower Woodland #2 Mod East"}}, "attendance": [{"name": "Alex B", "weeks": {"1": "In", "2": "Out of town", "3": "In", "4": "In", "5": "Injured/Sick", "6": "In", "7": "In", "8": "In", "9": "Injured/Sick", "10": "In"}}, {"name": "Alex G", "weeks": {"1": "In", "2": "In", "3": "In", "4": "In", "5": "In", "6": "In", "7": "In", "8": "In", "9": "In", "10": "In"}}, {"name": "Bongo", "weeks": {"1": "In", "2": "Out - other", "3": "In", "4": "In", "5": "Out - other", "6": "Out - other", "7": "Out - other", "8": "In", "9": "In", "10": "In"}}, {"name": "Brad", "weeks": {"1": "In", "2": "In", "3": "In", "4": "Out - other", "5": "In", "6": "In", "7": "In", "8": "In", "9": "Out of town", "10": "Out of town"}}, {"name": "Cam", "weeks": {"1": "In", "2": "In", "3": "In", "4": "In", "5": "In", "6": "In", "7": "In", "8": "In", "9": "In", "10": "In"}}, {"name": "Danny", "weeks": {"1": "In", "2": "In", "3": "In", "4": "In", "5": "Out - other", "6": "In", "7": "Out of town", "8": "Out of town", "9": "Injured/Sick", "10": "Injured/Sick"}}, {"name": "Fo", "weeks": {"1": "Out - other", "2": "Out - other", "3": "In", "4": "Out - other", "5": "Out - other", "6": "In", "7": "In", "8": "Injured/Sick", "9": "Injured/Sick", "10": "Injured/Sick"}}, {"name": "Jake", "weeks": {"1": "Injured/Sick", "2": "In", "3": "In", "4": "Out - other", "5": "In", "6": "In", "7": "In", "8": "In", "9": "In", "10": "In"}}, {"name": "James", "weeks": {"1": "In", "2": "In", "3": "In", "4": "In", "5": "In", "6": "In", "7": "Out of town", "8": "In", "9": "In", "10": "In"}}, {"name": "Jon", "weeks": {"1": "Out of town", "2": "In", "3": "Out of town", "4": "In", "5": "In", "6": "Out - other", "7": "Out of town", "8": "In", "9": "In", "10": "In"}}, {"name": "Nick", "weeks": {"1": "Out - other", "2": "Out - other", "3": "Injured/Sick", "4": "Out - other", "5": "In", "6": "In", "7": "In", "8": "Out - other", "9": "In", "10": "In"}}, {"name": "Richie", "weeks": {"1": "In", "2": "In", "3": "In", "4": "Out of town", "5": "In", "6": "Injured/Sick", "7": "In", "8": "In", "9": "In", "10": "In"}}, {"name": "Skyler", "weeks": {"1": "In", "2": "In", "3": "Out - other", "4": "In", "5": "Out - other", "6": "In", "7": "In", "8": "In", "9": "Out - other", "10": "In"}}, {"name": "Stephen", "weeks": {"1": "Out of town", "2": "Out of town", "3": "Out of town", "4": "In", "5": "In", "6": "In", "7": "In", "8": "In", "9": "In", "10": "In"}}, {"name": "Zach", "weeks": {"1": "In", "2": "In", "3": "In", "4": "Out - other", "5": "In", "6": "In", "7": "Out - other", "8": "In", "9": "In", "10": "In"}}], "trackerOpponents": {"1": {"opponent": "Far Post", "result": "9-8 (W)"}, "2": {"opponent": "Tangle Town", "result": "5-6 (L)"}, "3": {"opponent": "Lea Hill Legends", "result": "6-4 (W)"}, "4": {"opponent": "Al nomu phi phariqi", "result": "16-4 (W)"}, "5": {"opponent": "Blue Ballers", "result": "6-0 (W)"}, "6": {"opponent": "Mednesday Marmots", "result": "9-5 (W)"}, "7": {"opponent": "Joe Schmoes", "result": "11-3 (W)"}, "8": {"opponent": "Joe Schmoes", "result": "6-4 (W)"}, "9": {"opponent": "Far Post", "result": "6-5 (W)"}, "10": {"opponent": "Dangleton Wednesday", "result": "5-0 (W)"}}, "seasonHistory": {"seasons": [["Winter 2025", 1, 8], ["Spring 2025", 9, 19], ["Summer 2025", 20, 29], ["Fall 2025", 30, 40], ["Winter 2026", 41, 48], ["Spring 2026", 49, 58]], "cumulativePoints": [{"name": "Alex B", "weeklyPoints": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 8, 10, 12, 14, 16, 22, 24, 26, 26, 26, 28, 34, 40, 42, 44, 46, 46, 52, 58, 60, 65, 71, 71, 73, 75, 81, 83, 83, 85, 87, 87, 89, 91, 93, 93, 99]}, {"name": "Alex G", "weeklyPoints": [11, 18, 18, 23, 29, 31, 37, 43, 45, 53, 61, 67, 75, 84, 86, 86, 94, 111, 113, 115, 117, 119, 130, 132, 148, 148, 150, 156, 158, 160, 165, 165, 173, 182, 188, 188, 199, 201, 206, 212, 218, 220, 222, 229, 229, 231, 231, 237, 250, 252, 254, 256, 268, 282, 284, 286, 294, 303]}, {"name": "Bongo", "weeklyPoints": [0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 14, 29, 34, 49, 62, 64, 64, 66, 68, 70, 72, 79, 87, 94, 96, 103, 105, 113, 115, 117, 119, 125, 125, 125, 127, 129, 129, 131, 131, 133, 133, 133, 133, 133, 133, 133, 133, 133, 138, 138, 140, 155, 155, 155, 155, 157, 165, 167]}, {"name": "Brad", "weeklyPoints": [0, 20, 30, 37, 47, 47, 47, 55, 55, 63, 86, 106, 106, 111, 132, 132, 132, 132, 134, 136, 136, 151, 164, 187, 195, 195, 195, 216, 224, 226, 226, 226, 244, 257, 269, 271, 286, 288, 298, 300, 310, 320, 330, 330, 340, 350, 355, 357, 380, 400, 412, 412, 424, 432, 448, 460, 460, 460]}, {"name": "Cam", "weeklyPoints": [16, 46, 60, 60, 60, 76, 76, 83, 95, 112, 141, 141, 156, 187, 215, 215, 230, 243, 243, 245, 245, 245, 245, 245, 245, 250, 250, 250, 265, 267, 269, 279, 288, 301, 314, 316, 333, 335, 351, 351, 365, 380, 390, 396, 396, 413, 430, 436, 450, 452, 461, 491, 507, 521, 530, 542, 552, 562]}, {"name": "Danny", "weeklyPoints": [0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 26, 33, 50, 60, 73, 75, 87, 97, 104, 104, 104, 114, 129, 139, 139, 139, 139, 147, 147, 149, 149, 149, 162, 162, 162, 162, 170, 170, 170, 175, 175, 175, 175, 175, 175, 175, 175, 175, 180, 185, 200, 227, 227, 240, 240, 240, 240, 240]}, {"name": "Fo", "weeklyPoints": [0, 0, 0, 5, 10, 12, 12, 20, 20, 20, 31, 33, 42, 64, 64, 66, 68, 68, 70, 72, 72, 74, 74, 74, 85, 87, 93, 106, 108, 110, 110, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 114, 114, 114, 119, 125, 125, 125, 125]}, {"name": "Jake", "weeklyPoints": [0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 11, 11, 12, 12, 12, 14, 14, 14, 16, 16, 16, 16, 23, 23, 30, 37, 47, 47, 47, 47, 57, 64, 64, 64, 64, 64, 64, 66, 68, 80, 80, 80, 87, 87, 87, 87, 87, 89, 89, 91, 98, 98, 105, 115, 122, 132, 139, 141]}, {"name": "James", "weeklyPoints": [7, 15, 25, 35, 37, 44, 57, 62, 74, 86, 88, 101, 106, 116, 126, 126, 134, 134, 139, 141, 148, 154, 174, 184, 189, 189, 195, 197, 199, 201, 211, 219, 229, 259, 264, 264, 266, 268, 268, 274, 279, 294, 306, 314, 316, 316, 316, 322, 329, 335, 340, 361, 369, 382, 382, 384, 386, 388]}, {"name": "Jon", "weeklyPoints": [0, 0, 0, 0, 0, 0, 0, 0, 5, 7, 7, 13, 18, 18, 18, 18, 18, 20, 22, 22, 22, 22, 28, 30, 30, 32, 32, 38, 40, 40, 42, 48, 50, 56, 56, 58, 60, 62, 67, 73, 79, 83, 83, 89, 91, 102, 104, 106, 106, 111, 111, 119, 125, 125, 125, 127, 129, 135]}, {"name": "Kenny", "weeklyPoints": [2, 4, 6, 6, 12, 14, 20, 26, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28]}, {"name": "Nick", "weeklyPoints": [7, 7, 15, 15, 29, 36, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 48, 48, 48, 54, 74, 86, 96, 98, 98, 98, 98, 98, 104, 116, 144, 144, 159, 164]}, {"name": "Richie", "weeklyPoints": [0, 0, 0, 0, 0, 0, 0, 0, 15, 20, 20, 22, 31, 31, 33, 35, 37, 47, 49, 51, 51, 51, 57, 62, 62, 62, 67, 78, 78, 80, 90, 96, 98, 110, 116, 118, 120, 122, 127, 129, 131, 133, 138, 146, 148, 156, 158, 163, 165, 170, 172, 172, 178, 178, 186, 188, 188, 201]}, {"name": "Samy", "weeklyPoints": [2, 7, 9, 11, 11, 11, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17]}, {"name": "Sean", "weeklyPoints": [6, 13, 23, 29, 29, 35, 44, 62, 62, 64, 69, 77, 77, 79, 96, 96, 98, 103, 103, 105, 107, 107, 107, 123, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128]}, {"name": "Skyler", "weeklyPoints": [2, 4, 4, 4, 4, 9, 9, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 20, 27, 29, 38, 40, 45, 47, 47, 55, 57, 57, 76, 76, 78, 92, 100, 100, 112]}, {"name": "Stephen", "weeklyPoints": [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 6, 6, 13, 15, 24, 29, 39, 49, 55, 55, 66, 68, 70, 70, 72, 74, 76, 76, 76, 76, 76, 83, 88, 90, 90, 90, 90, 90, 90, 90, 90, 105, 107, 109, 114, 116, 118, 120]}, {"name": "Thaddeus", "weeklyPoints": [2, 4, 6, 8, 17, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19]}, {"name": "Zach", "weeklyPoints": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 12, 23, 23, 25, 32, 32, 32, 37, 42, 42, 42, 44, 54, 56, 61, 63, 63, 70, 72, 74, 76, 82, 87, 94, 96, 96, 98, 100, 100, 112, 119, 131]}]}, "career": [{"name": "Alex B", "priorGames": 20, "priorGoals": 0, "priorAssists": 1, "springGames": 7, "springGoals": 0, "springAssists": 0, "totalGames": 27, "totalGoals": 0, "totalAssists": 1}, {"name": "Alex G", "priorGames": 39, "priorGoals": 12, "priorAssists": 13, "springGames": 10, "springGoals": 3, "springAssists": 7, "totalGames": 49, "totalGoals": 15, "totalAssists": 20}, {"name": "Bongo", "priorGames": 27, "priorGoals": 9, "priorAssists": 10, "springGames": 6, "springGoals": 2, "springAssists": 4, "totalGames": 33, "totalGoals": 11, "totalAssists": 14}, {"name": "Brad", "priorGames": 30, "priorGoals": 37, "priorAssists": 36, "springGames": 7, "springGoals": 13, "springAssists": 8, "totalGames": 37, "totalGoals": 50, "totalAssists": 44}, {"name": "Cam", "priorGames": 30, "priorGoals": 64, "priorAssists": 35, "springGames": 10, "springGoals": 15, "springAssists": 15, "totalGames": 40, "totalGoals": 79, "totalAssists": 50}, {"name": "Danny", "priorGames": 18, "priorGoals": 16, "priorAssists": 20, "springGames": 5, "springGoals": 5, "springAssists": 10, "totalGames": 23, "totalGoals": 21, "totalAssists": 30}, {"name": "Fo", "priorGames": 20, "priorGoals": 9, "priorAssists": 12, "springGames": 3, "springGoals": 1, "springAssists": 1, "totalGames": 23, "totalGoals": 10, "totalAssists": 13}, {"name": "Jake", "priorGames": 16, "priorGoals": 10, "priorAssists": 2, "springGames": 8, "springGoals": 6, "springAssists": 2, "totalGames": 24, "totalGoals": 16, "totalAssists": 4}, {"name": "James", "priorGames": 39, "priorGoals": 32, "priorAssists": 28, "springGames": 9, "springGoals": 6, "springAssists": 6, "totalGames": 48, "totalGoals": 38, "totalAssists": 34}, {"name": "Jon", "priorGames": 23, "priorGoals": 1, "priorAssists": 5, "springGames": 6, "springGoals": 1, "springAssists": 1, "totalGames": 29, "totalGoals": 2, "totalAssists": 6}, {"name": "Kenny", "priorGames": 8, "priorGoals": 0, "priorAssists": 0, "springGames": 0, "springGoals": 0, "springAssists": 0, "totalGames": 8, "totalGoals": 0, "totalAssists": 0}, {"name": "Nick", "priorGames": 7, "priorGoals": 12, "priorAssists": 6, "springGames": 5, "springGoals": 9, "springAssists": 4, "totalGames": 12, "totalGoals": 21, "totalAssists": 10}, {"name": "Richie", "priorGames": 29, "priorGoals": 7, "priorAssists": 14, "springGames": 8, "springGoals": 2, "springAssists": 3, "totalGames": 37, "totalGoals": 9, "totalAssists": 17}, {"name": "Samy", "priorGames": 5, "priorGoals": 0, "priorAssists": 1, "springGames": 0, "springGoals": 0, "springAssists": 0, "totalGames": 5, "totalGoals": 0, "totalAssists": 1}, {"name": "Sean", "priorGames": 18, "priorGoals": 16, "priorAssists": 9, "springGames": 0, "springGoals": 0, "springAssists": 0, "totalGames": 18, "totalGoals": 16, "totalAssists": 9}, {"name": "Skyler", "priorGames": 8, "priorGoals": 1, "priorAssists": 4, "springGames": 7, "springGoals": 6, "springAssists": 4, "totalGames": 15, "totalGoals": 7, "totalAssists": 8}, {"name": "Stephen", "priorGames": 19, "priorGoals": 8, "priorAssists": 5, "springGames": 7, "springGoals": 3, "springAssists": 1, "totalGames": 26, "totalGoals": 11, "totalAssists": 6}, {"name": "Thaddeus", "priorGames": 6, "priorGoals": 0, "priorAssists": 1, "springGames": 0, "springGoals": 0, "springAssists": 0, "totalGames": 6, "totalGoals": 0, "totalAssists": 1}, {"name": "Zach", "priorGames": 13, "priorGoals": 6, "priorAssists": 5, "springGames": 8, "springGoals": 6, "springAssists": 1, "totalGames": 21, "totalGoals": 12, "totalAssists": 6}], "pointTable": {"Keeper": {"Goal": 6, "Assist": 3, "Clean-Enough Sheet": 4, "Missed PK": -2, "Own Goal": -2, "Yellow Card": -1}, "Defender": {"Goal": 6, "Assist": 3, "Clean-Enough Sheet": 4, "Missed PK": -2, "Own Goal": -2, "Yellow Card": -1}, "Mid": {"Goal": 5, "Assist": 3, "Clean-Enough Sheet": 0, "Missed PK": -2, "Own Goal": -2, "Yellow Card": -1}, "Forward": {"Goal": 4, "Assist": 3, "Clean-Enough Sheet": 0, "Missed PK": -2, "Own Goal": -2, "Yellow Card": -1}}, "defaultPosition": {"Cam": "Forward", "Brad": "Mid", "Zach": "Mid", "Alex G": "Defender", "James": "Mid", "Skyler": "Defender", "Bongo": "Mid", "Danny": "Mid", "Richie": "Mid", "Jon": "Defender", "Jake": "Mid", "Stephen": "Forward", "Nick": "Mid", "Fo": "Forward", "Extra": "Mid", "Alex B": "Defender"}}</script>
+<script>
+(function(){
+  const SEED = JSON.parse(document.getElementById('seed-data').textContent);
+  const STORAGE_KEY = 'pounders:v1:state';
+  const STATUS_OPTIONS = ['In','Injured/Sick','Out of town','Out - other'];
+  const EVENT_TYPES = ['Goal','Assist','Clean-Enough Sheet','Missed PK','Own Goal','Yellow Card'];
+
+  let charts = {};
+
+  // ---------- build normalized state from seed ----------
+  function buildInitialState(seed){
+    const roster = seed.leaderboard.map(p => p.name).filter(n => n !== 'Extra');
+    const positions = Object.assign({}, seed.defaultPosition);
+    roster.forEach(n => { if(!positions[n]) positions[n] = 'Mid'; });
+
+    const games = [];
+    for(let w=1; w<=10; w++){
+      const meta = seed.gameMeta[w] || {};
+      const score = (seed.scores || []).find(s => s.week === w) || {};
+      const tOpp = seed.trackerOpponents[w] || {};
+      const attRow = {};
+      (seed.attendance || []).forEach(p => {
+        attRow[p.name] = (p.weeks && p.weeks[w]) || 'In';
+      });
+      const events = (seed.events || [])
+        .filter(e => e.week === w && e.name && e.name !== 'Extra')
+        .map(e => ({
+          name: e.name,
+          type: normalizeType(e.type),
+          assister: e.assister || '',
+          points: e.points
+        }));
+      games.push({
+        id: 'seed-' + w,
+        week: w,
+        date: meta.date ? meta.date.slice(0,10) : '',
+        time: meta.time || '',
+        field: meta.field || '',
+        opponent: tOpp.opponent || score.opponent || '',
+        h1gf: score.h1gf ?? 0, h1ga: score.h1ga ?? 0,
+        h2gf: score.h2gf ?? 0, h2ga: score.h2ga ?? 0,
+        attendance: attRow,
+        events: events
+      });
+    }
+
+    return {
+      roster,
+      positions,
+      pointTable: seed.pointTable,
+      games,
+      seasonLabel: 'Spring 2026'
+    };
+  }
+
+  function normalizeType(t){
+    if(!t) return 'Goal';
+    if(t === 'Own Goal' || t === 'Missed PK' || t === 'Yellow Card') return t;
+    if(t === 'Clean-Enough Sheet') return t;
+    if(t === 'Goal') return 'Goal';
+    if(t === 'Assist') return 'Assist';
+    return t;
+  }
+
+  // ---------- storage ----------
+  function loadState(cb){
+    if(!window.storage){ cb(buildInitialState(SEED)); return; }
+    window.storage.get(STORAGE_KEY, false).then(res=>{
+      if(res && res.value){
+        try{ cb(JSON.parse(res.value)); return; }catch(e){}
+      }
+      cb(buildInitialState(SEED));
+    }).catch(()=> cb(buildInitialState(SEED)));
+  }
+  function saveState(state, noteEl){
+    if(!window.storage){ return; }
+    window.storage.set(STORAGE_KEY, JSON.stringify(state), false).then(res=>{
+      if(noteEl){
+        noteEl.textContent = 'Saved ' + new Date().toLocaleTimeString();
+        noteEl.classList.add('ok');
+      }
+      const ls = document.getElementById('lastSaved');
+      if(ls) ls.textContent = 'Last saved ' + new Date().toLocaleString();
+    }).catch(()=>{
+      if(noteEl){ noteEl.textContent = 'Could not save — data will reset on reload.'; noteEl.classList.remove('ok'); }
+    });
+  }
+
+  let STATE = null;
+
+  // ---------- derived calculations ----------
+  function computeLeaderboard(state){
+    const rows = {};
+    state.roster.forEach(n => rows[n] = {
+      name:n, games:0, goals:0, assists:0, cleanSheets:0, missedPK:0, ownGoal:0, yellowCard:0, points:0
+    });
+    state.games.forEach(g => {
+      Object.keys(g.attendance).forEach(name => {
+        if(g.attendance[name] === 'In' && rows[name]) rows[name].games++;
+      });
+      g.events.forEach(e => {
+        if(!rows[e.name]) return;
+        const r = rows[e.name];
+        if(e.type === 'Goal') r.goals++;
+        else if(e.type === 'Assist') r.assists++;
+        else if(e.type === 'Clean-Enough Sheet') r.cleanSheets++;
+        else if(e.type === 'Missed PK') r.missedPK++;
+        else if(e.type === 'Own Goal') r.ownGoal++;
+        else if(e.type === 'Yellow Card') r.yellowCard++;
+        r.points += (typeof e.points === 'number') ? e.points : pointsFor(state, e.name, e.type);
+      });
+    });
+    return Object.values(rows).map(r => ({...r, ppg: r.games ? r.points/r.games : 0}));
+  }
+
+  function pointsFor(state, name, type){
+    const pos = state.positions[name] || 'Mid';
+    const t = state.pointTable[pos] || state.pointTable['Mid'];
+    return t[type] ?? 0;
+  }
+
+  function teamRecord(state){
+    let w=0,l=0,d=0, gf=0, ga=0;
+    const results = [];
+    state.games.forEach(g=>{
+      const f = (g.h1gf||0)+(g.h2gf||0), a = (g.h1ga||0)+(g.h2ga||0);
+      gf+=f; ga+=a;
+      if(f>a){w++; results.push('W');} else if(f<a){l++; results.push('L');} else {d++; results.push('D');}
+    });
+    return {w,l,d,gf,ga,results};
+  }
+
+  // ---------- rendering ----------
+  function renderHeader(state){
+    const rec = teamRecord(state);
+    document.getElementById('seasonEyebrow').textContent = '8v8 · Rec League · ' + state.seasonLabel;
+    const hs = document.getElementById('headlineStats');
+    hs.innerHTML = `
+      <div class="headline-stat"><div class="v">${rec.w}-${rec.l}${rec.d?('-'+rec.d):''}</div><div class="l">Record</div></div>
+      <div class="headline-stat"><div class="v">${rec.gf}</div><div class="l">Goals for</div></div>
+      <div class="headline-stat"><div class="v">${rec.ga}</div><div class="l">Goals against</div></div>
+      <div class="headline-stat"><div class="v">${state.games.length}</div><div class="l">Games</div></div>
+    `;
+    const fg = document.getElementById('formGuide');
+    fg.innerHTML = rec.results.map(r => `<div class="fg-pill ${r}">${r}</div>`).join('') || '<span style="color:rgba(246,243,234,.5);font-size:12px;">No games yet</span>';
+  }
+
+  let sortKey = 'points', sortDir = -1;
+  function renderLeaderboard(state){
+    let rows = computeLeaderboard(state);
+    rows.sort((a,b)=>{
+      let av=a[sortKey], bv=b[sortKey];
+      if(typeof av === 'string') return sortDir * av.localeCompare(bv);
+      return sortDir * (av-bv);
+    });
+    const maxPts = Math.max(1, ...rows.map(r=>r.points));
+    const body = document.getElementById('lbBody');
+    body.innerHTML = rows.map((r,i)=>{
+      const cardStr = (r.missedPK||r.yellowCard) ? `${r.missedPK?('PK-'+r.missedPK+' '):''}${r.yellowCard?('YC-'+r.yellowCard):''}`.trim() || '—' : '—';
+      const barPct = Math.max(2, Math.round(100*r.points/maxPts));
+      return `
+      <tr class="player-row" data-name="${escAttr(r.name)}">
+        <td class="rank">${i+1}</td>
+        <td class="name">${esc(r.name)} <span style="color:var(--ink-soft);font-weight:400;font-size:11px;">(${state.positions[r.name]||''})</span></td>
+        <td class="num num">${r.games}</td>
+        <td class="num num">${r.goals}</td>
+        <td class="num num">${r.assists}</td>
+        <td class="num num">${r.cleanSheets}</td>
+        <td class="num num" style="color:var(--ink-soft);">${cardStr}</td>
+        <td class="num pts-cell bar-cell num">
+          ${r.points}
+          <div class="bar-track"><div class="bar-fill" style="width:${barPct}%"></div></div>
+        </td>
+        <td class="num num">${r.ppg.toFixed(1)}</td>
+      </tr>
+      <tr class="expand-row" data-expand="${escAttr(r.name)}"><td colspan="9"><div class="expand-inner" id="exp-${slug(r.name)}"></div></td></tr>
+      `;
+    }).join('') || `<tr><td colspan="9" class="empty">No players yet.</td></tr>`;
+
+    body.querySelectorAll('.player-row').forEach(tr=>{
+      tr.addEventListener('click', ()=>{
+        const name = tr.getAttribute('data-name');
+        const box = document.getElementById('exp-'+slug(name));
+        const open = box.classList.contains('open');
+        body.querySelectorAll('.expand-inner.open').forEach(b=>b.classList.remove('open'));
+        if(!open){ box.classList.add('open'); renderPlayerDetail(state, name, box); }
+      });
+    });
+
+    // header sort handlers
+    document.querySelectorAll('#lbTable th[data-sort]').forEach(th=>{
+      th.classList.toggle('sorted', th.getAttribute('data-sort')===sortKey);
+      th.onclick = ()=>{
+        const key = th.getAttribute('data-sort');
+        if(sortKey===key) sortDir *= -1; else { sortKey = key; sortDir = key==='name' ? 1 : -1; }
+        renderLeaderboard(state);
+      };
+    });
+  }
+
+  function renderPlayerDetail(state, name, box){
+    const gp = [];
+    let running = 0;
+    state.games.forEach(g=>{
+      const evs = g.events.filter(e=>e.name===name);
+      const pts = evs.reduce((s,e)=> s + (typeof e.points==='number'?e.points:pointsFor(state,e.name,e.type)), 0);
+      running += pts;
+      const att = g.attendance[name] || 'In';
+      gp.push({week:g.week, opponent:g.opponent, pts, running, att, evs});
+    });
+    const totalPts = running;
+    const gamesIn = gp.filter(g=>g.att==='In').length;
+    box.innerHTML = `
+      <div class="mini-stat-row">
+        <div class="mini-stat"><b>${totalPts}</b>Season points</div>
+        <div class="mini-stat"><b>${gamesIn}/${gp.length}</b>Games attended</div>
+        <div class="mini-stat"><b>${gp.length?(totalPts/Math.max(1,gamesIn)).toFixed(1):'0.0'}</b>Points / game played</div>
+      </div>
+      <div class="chart-wrap" style="height:180px;"><canvas id="detail-${slug(name)}"></canvas></div>
+    `;
+    const ctx = box.querySelector('canvas').getContext('2d');
+    new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: gp.map(g=>'Wk '+g.week),
+        datasets:[{
+          data: gp.map(g=>g.running),
+          borderColor:'#16302B',
+          backgroundColor:'rgba(214,162,51,0.15)',
+          fill:true, tension:.3, pointRadius:3,
+          pointBackgroundColor: gp.map(g=> g.att==='In' ? '#D6A233' : '#C4C4C0')
+        }]
+      },
+      options:{
+        plugins:{legend:{display:false}},
+        scales:{ y:{ grid:{color:'rgba(28,28,26,0.06)'} }, x:{ grid:{display:false} } }
+      }
+    });
+  }
+
+  function renderGames(state){
+    const rec = teamRecord(state);
+    const list = document.getElementById('gamesList');
+    if(!state.games.length){ list.innerHTML = '<div class="empty">No games logged yet.</div>'; return; }
+    list.innerHTML = state.games.map((g,i)=>{
+      const f = (g.h1gf||0)+(g.h2gf||0), a = (g.h1ga||0)+(g.h2ga||0);
+      const res = f>a?'win':(f<a?'loss':'');
+      const label = f>a?'W':(f<a?'L':'D');
+      return `
+      <div style="border-bottom:1px solid var(--line); padding:12px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" data-toggle="g-${i}">
+          <div>
+            <span class="season-chip">Wk ${g.week}</span>
+            <strong>${esc(g.opponent||'TBD')}</strong>
+            <span style="color:var(--ink-soft); font-size:12px; margin-left:8px;">${g.date||''} ${g.field?('· '+esc(g.field)):''}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="num" style="font-size:16px;font-weight:600;">${f}–${a}</span>
+            <span class="chip ${res}">${label}</span>
+          </div>
+        </div>
+        <div class="expand-inner" id="g-${i}" style="padding-top:10px;">
+          <div style="font-size:12px; color:var(--ink-soft); margin-bottom:8px;">1st half ${g.h1gf}–${g.h1ga} · 2nd half ${g.h2gf}–${g.h2ga}</div>
+          ${g.events.length ? g.events.map(e=>`<div style="font-size:12.5px; padding:3px 0;">${esc(e.name)} — ${esc(e.type)}${e.assister?(' <span style="color:var(--ink-soft);">(assist: '+esc(e.assister)+')</span>'):''} <span class="num" style="color:var(--pitch); font-weight:600;">+${typeof e.points==='number'?e.points:pointsFor(state,e.name,e.type)}</span></div>`).join('') : '<div class="empty" style="padding:8px 0;">No events logged.</div>'}
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-toggle]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const id = el.getAttribute('data-toggle');
+        const box = document.getElementById(id);
+        box.classList.toggle('open');
+        box.style.display = box.classList.contains('open') ? 'block' : 'none';
+      });
+      document.getElementById(el.getAttribute('data-toggle')).style.display='none';
+    });
+
+    renderHalfChart(state);
+  }
+
+  function renderHalfChart(state){
+    if(charts.half) charts.half.destroy();
+    const ctx = document.getElementById('halfChart').getContext('2d');
+    charts.half = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels: state.games.map(g=>'Wk '+g.week+' vs '+(g.opponent||'?')),
+        datasets:[
+          {label:'1st half GD', data: state.games.map(g=>(g.h1gf||0)-(g.h1ga||0)), backgroundColor:'#16302B'},
+          {label:'2nd half GD', data: state.games.map(g=>(g.h2gf||0)-(g.h2ga||0)), backgroundColor:'#D6A233'}
+        ]
+      },
+      options:{
+        plugins:{legend:{position:'bottom', labels:{boxWidth:10,font:{size:11}}}},
+        scales:{ x:{ grid:{display:false}, ticks:{font:{size:10}} }, y:{ grid:{color:'rgba(28,28,26,0.06)'} } }
+      }
+    });
+  }
+
+  function renderAttendance(state){
+    if(charts.attend) charts.attend.destroy();
+    const ctx = document.getElementById('attendChart').getContext('2d');
+    charts.attend = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels: state.games.map(g=>'Wk '+g.week),
+        datasets:[{
+          label:'Players in',
+          data: state.games.map(g=> Object.values(g.attendance).filter(s=>s==='In').length),
+          backgroundColor:'#3C7A5B',
+          borderRadius:3
+        }]
+      },
+      options:{ plugins:{legend:{display:false}}, scales:{ y:{ grid:{color:'rgba(28,28,26,0.06)'} }, x:{grid:{display:false}} } }
+    });
+
+    const grid = document.getElementById('heatGrid');
+    const cols = state.games.length + 1;
+    grid.style.gridTemplateColumns = `140px repeat(${state.games.length}, 1fr)`;
+    let html = `<div class="heat-cell heat-head heat-name">Player</div>`;
+    state.games.forEach(g=> html += `<div class="heat-cell heat-head">Wk ${g.week}</div>`);
+    state.roster.forEach(name=>{
+      html += `<div class="heat-cell heat-name">${esc(name)}</div>`;
+      state.games.forEach(g=>{
+        const s = g.attendance[name] || 'In';
+        const cls = s==='In' ? 'heat-In' : s==='Injured/Sick' ? 'heat-Injured/Sick' : s==='Out of town' ? 'heat-Out.of.town' : 'heat-Out.-.other';
+        const short = s==='In' ? 'In' : s==='Injured/Sick' ? 'Inj' : s==='Out of town' ? 'OoT' : 'Out';
+        html += `<div class="heat-cell ${cls}" title="${esc(s)}">${short}</div>`;
+      });
+    });
+    grid.innerHTML = html;
+  }
+
+  function renderHistory(state){
+    const sh = SEED.seasonHistory;
+    if(!sh){ return; }
+    // top 8 by final cumulative points
+    const withTotals = sh.cumulativePoints.map(p=>({name:p.name, total:p.weeklyPoints[p.weeklyPoints.length-1], weeks:p.weeklyPoints}));
+    withTotals.sort((a,b)=>b.total-a.total);
+    const top = withTotals.slice(0,8);
+    const palette = ['#16302B','#D6A233','#3C7A5B','#B5483A','#7C93B0','#9B7FBF','#B06E27','#546E8C'];
+
+    if(charts.history) charts.history.destroy();
+    const ctx = document.getElementById('historyChart').getContext('2d');
+    charts.history = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: top[0].weeks.map((_,i)=>i+1),
+        datasets: top.map((p,i)=>({
+          label:p.name, data:p.weeks, borderColor:palette[i%palette.length],
+          borderWidth: i===0?2.5:1.5, pointRadius:0, tension:.25
+        }))
+      },
+      options:{
+        plugins:{legend:{position:'bottom', labels:{boxWidth:10,font:{size:11}}}},
+        scales:{ x:{title:{display:true,text:'Game # (career)',font:{size:11}}, grid:{display:false}}, y:{grid:{color:'rgba(28,28,26,0.06)'}} }
+      }
+    });
+
+    // season boundary annotation note
+    const seasonNote = sh.seasons.map(s=>s[0]+' starts g'+s[1]).join(' · ');
+
+    const body = document.getElementById('careerBody');
+    body.innerHTML = SEED.career.slice().sort((a,b)=>b.totalGoals-a.totalGoals).map(c=>`
+      <tr>
+        <td class="name">${esc(c.name)}</td>
+        <td class="num num">${c.priorGames}</td>
+        <td class="num num">${c.priorGoals}</td>
+        <td class="num num">${c.priorAssists}</td>
+        <td class="num num">${c.totalGoals}</td>
+        <td class="num num">${c.totalAssists}</td>
+        <td class="num num">${c.totalGames}</td>
+      </tr>`).join('');
+  }
+
+  // ---------- add game form ----------
+  function renderAddGameForm(state){
+    const attBox = document.getElementById('ag-attendance');
+    attBox.innerHTML = state.roster.map(name=>`
+      <div class="field">
+        <label>${esc(name)}</label>
+        <select data-att="${escAttr(name)}">
+          ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s==='In'?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>`).join('');
+
+    const evBox = document.getElementById('ag-events');
+    evBox.innerHTML = '';
+    document.getElementById('ag-note').textContent = '';
+
+    document.getElementById('ag-addEvent').onclick = ()=> addEventRow(state);
+    document.getElementById('ag-save').onclick = ()=> saveNewGame(state);
+    document.getElementById('resetData').onclick = ()=>{
+      if(confirm('Reset all data back to the original spreadsheet import? Any games you added will be lost.')){
+        STATE = buildInitialState(SEED);
+        saveState(STATE);
+        renderAll(STATE);
+      }
+    };
+  }
+
+  function addEventRow(state){
+    const evBox = document.getElementById('ag-events');
+    const row = document.createElement('div');
+    row.className = 'event-row';
+    row.innerHTML = `
+      <select class="ev-name">${state.roster.map(n=>`<option value="${escAttr(n)}">${esc(n)}</option>`).join('')}</select>
+      <select class="ev-type">${EVENT_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select>
+      <select class="ev-assist"><option value="">— no assist —</option>${state.roster.map(n=>`<option value="${escAttr(n)}">${esc(n)}</option>`).join('')}</select>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="pts-preview">+0</span>
+        <button class="remove-x" type="button" title="Remove">✕</button>
+      </div>
+    `;
+    evBox.appendChild(row);
+    const nameSel = row.querySelector('.ev-name');
+    const typeSel = row.querySelector('.ev-type');
+    const preview = row.querySelector('.pts-preview');
+    function updatePreview(){
+      const pts = pointsFor(state, nameSel.value, typeSel.value);
+      preview.textContent = (pts>=0?'+':'') + pts;
+    }
+    nameSel.addEventListener('change', updatePreview);
+    typeSel.addEventListener('change', updatePreview);
+    row.querySelector('.remove-x').addEventListener('click', ()=> row.remove());
+    updatePreview();
+  }
+
+  function saveNewGame(state){
+    const opponent = document.getElementById('ag-opponent').value.trim();
+    if(!opponent){ alert('Add an opponent name first.'); return; }
+    const date = document.getElementById('ag-date').value;
+    const field = document.getElementById('ag-field').value.trim();
+    const time = document.getElementById('ag-time').value;
+    const h1gf = +document.getElementById('ag-h1gf').value || 0;
+    const h1ga = +document.getElementById('ag-h1ga').value || 0;
+    const h2gf = +document.getElementById('ag-h2gf').value || 0;
+    const h2ga = +document.getElementById('ag-h2ga').value || 0;
+
+    const attendance = {};
+    document.querySelectorAll('#ag-attendance [data-att]').forEach(sel=>{
+      attendance[sel.getAttribute('data-att')] = sel.value;
+    });
+
+    const events = [];
+    document.querySelectorAll('#ag-events .event-row').forEach(row=>{
+      const name = row.querySelector('.ev-name').value;
+      const type = row.querySelector('.ev-type').value;
+      const assister = row.querySelector('.ev-assist').value;
+      events.push({name, type, assister, points: pointsFor(state, name, type)});
+    });
+
+    const nextWeek = state.games.length ? Math.max(...state.games.map(g=>g.week))+1 : 1;
+    state.games.push({
+      id: 'g-' + Date.now(),
+      week: nextWeek, date, time, field, opponent,
+      h1gf, h1ga, h2gf, h2ga,
+      attendance, events
+    });
+
+    const noteEl = document.getElementById('ag-note');
+    saveState(state, noteEl);
+
+    // reset form
+    document.getElementById('ag-opponent').value='';
+    document.getElementById('ag-date').value='';
+    document.getElementById('ag-field').value='';
+    document.getElementById('ag-time').value='';
+    ['ag-h1gf','ag-h1ga','ag-h2gf','ag-h2ga'].forEach(id=>document.getElementById(id).value=0);
+    renderAddGameForm(state);
+
+    renderAll(state);
+    switchTab('games');
+  }
+
+  // ---------- utils ----------
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escAttr(s){ return esc(s); }
+  function slug(s){ return String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+
+  function renderAll(state){
+    renderHeader(state);
+    renderLeaderboard(state);
+    renderGames(state);
+    renderAttendance(state);
+    renderHistory(state);
+    renderAddGameForm(state);
+  }
+
+  function switchTab(name){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.getAttribute('data-view')===name));
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id === 'view-'+name));
+  }
+
+  document.getElementById('tabbar').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tab');
+    if(!btn) return;
+    switchTab(btn.getAttribute('data-view'));
+  });
+
+  loadState(function(state){
+    STATE = state;
+    renderAll(STATE);
+  });
+
+})();
+</script>
+</body>
+</html>
